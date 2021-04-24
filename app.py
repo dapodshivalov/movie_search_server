@@ -2,7 +2,7 @@ import nlp_utils
 import count
 import pandas as pd
 import logging
-from flask import Flask, make_response, request
+from flask import Flask, make_response, request, Response
 
 from search_module import SearchEngine
 
@@ -30,7 +30,7 @@ def get():
     knn = se.get_knn(query_vector)
     log.debug('RESULT')
     log.debug(str(knn))
-    return make_response({"results": knn})
+    return create_response(str({'results': knn}))
 
 
 @app.route(path + '/raw', methods=['GET'])
@@ -48,15 +48,19 @@ def raw_get():
             'title': titles[i],
             'distance': str(distances[i])
         })
-    return make_response({'row_results': results})
+    return create_response(str({'row_results': results}))
 
 
 @app.route('/', methods=['GET'])
 def hello():
     print("hello log!")
+    return create_response("Привет!")
 
-    return make_response('hello!')
 
+def create_response(s):
+    r = Response(response=s, status=200, mimetype="application/json")
+    r.headers["Content-Type"] = "application/json; charset=utf-8"
+    return r
 
 if __name__ == '__main__':
     app.run(debug=True)
