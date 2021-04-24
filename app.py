@@ -12,14 +12,17 @@ app.config['JSON_AS_ASCII'] = False
 path_to_vectors = 'data/cutted_vectorized_reviews.p'
 path = '/movie'
 
+global se
+se = SearchEngine(path_to_vectors)
+logging.basicConfig(filename="application.log", level=logging.DEBUG)
+
 
 @app.route(path, methods=['GET'])
 def get():
     log = logging.getLogger('file')
     query = request.args.get('query')
     print('QUERY', query)
-    log.debug('QUERY' + query)
-
+    log.debug('QUERY ' + query)
     tokenized_query = ' '.join(nlp_utils.tokenize(query))
     query_vector = nlp_utils.vectorize(tokenized_query)
     log.debug('Vector: ' + str(query_vector))
@@ -32,8 +35,10 @@ def get():
 
 @app.route(path + '/raw', methods=['GET'])
 def raw_get():
+    log = logging.getLogger('file')
     query = request.args.get('query')
     print('QUERY', query)
+    log.debug('QUERY ' + query)
     tokenized_query = ' '.join(nlp_utils.tokenize(query))
     query_vector = nlp_utils.vectorize(tokenized_query)
     titles, distances = se.get_knn_raw(query_vector)
@@ -48,11 +53,10 @@ def raw_get():
 
 @app.route('/', methods=['GET'])
 def hello():
+    print("hello log!")
+
     return make_response('hello!')
 
 
 if __name__ == '__main__':
-    global se
-    se = SearchEngine(path_to_vectors)
-    logging.basicConfig(filename="application.log", level=logging.DEBUG)
     app.run(debug=True)
