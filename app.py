@@ -1,8 +1,8 @@
 import nlp_utils
 import count
 import pandas as pd
+import logging
 from flask import Flask, make_response, request
-# from flask_restful import Api, Resource, reqparse
 
 from search_module import SearchEngine
 
@@ -15,12 +15,18 @@ path = '/movie'
 
 @app.route(path, methods=['GET'])
 def get():
+    log = logging.getLogger('file')
     query = request.args.get('query')
     print('QUERY', query)
+    log.debug('QUERY' + query)
+
     tokenized_query = ' '.join(nlp_utils.tokenize(query))
     query_vector = nlp_utils.vectorize(tokenized_query)
+    log.debug('Vector: ' + str(query_vector))
     global se
     knn = se.get_knn(query_vector)
+    log.debug('RESULT')
+    log.debug(str(knn))
     return make_response({"results": knn})
 
 
@@ -48,4 +54,5 @@ def hello():
 if __name__ == '__main__':
     global se
     se = SearchEngine(path_to_vectors)
+    logging.basicConfig(filename="application.log", level=logging.DEBUG)
     app.run(debug=True)

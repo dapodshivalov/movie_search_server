@@ -26,7 +26,7 @@ def tokenize(text):
 
 
 def vectorize(text):
-    rubert_path = '/Users/dapodshivalov/.deeppavlov/downloads/bert_models/multi_cased_L-12_H-768_A-12_pt'
+    rubert_path = 'deeppavlov/downloads/bert_models/multi_cased_L-12_H-768_A-12_pt'
     bert_config = read_json(configs.embedder.bert_embedder)
     bert_config['metadata']['variables']['BERT_PATH'] = rubert_path
     # print(bert_config)
