@@ -1,38 +1,28 @@
-import string
-from nltk.corpus import stopwords
-from deeppavlov.core.common.file import read_json
-from deeppavlov import build_model, configs
-from deeppavlov.models.tokenizers import ru_tokenizer
+import tensorflow.compat.v2 as tf
+import tensorflow_hub as hub
+from tensorflow_text import SentencepieceTokenizer
+from razdel import sentenize
 
 
-spec_chars = string.punctuation + '\n\xa0«»\t—…'
+class NlpUtils:
+    def __init__(self):
+        module_url = 'https://tfhub.dev/google/universal-sentence-encoder-multilingual/3'
+        self.model = hub.load(module_url)
 
-russian_stopwords = stopwords.words("russian")
+    def text_to_sentences(self, text: str) -> [str]:
+        return [s.text for s in list(sentenize(text))]
+
+    def sentence_to_vector(self, sentence: str) -> [float]:
+        return self.model([sentence]).numpy()[0]
+
+    def sentences_to_vectors(self, sents: [str]) -> [[float]]:
+        return self.model(sents).numpy()
+
+    def text_to_vectors(self, text: str) -> [[float]]:
+        sentences = self.text_to_sentences(text)
+        return self.sentences_to_vectors(sentences)
 
 
-def tokenize(text):
-    text = "".join([ch for ch in text if ch not in spec_chars])
-
-    ru_processor = ru_tokenizer.RussianTokenizer(stopwords=russian_stopwords, lowercase=True, lemmas=True)
-    lemmatizer = ru_processor.lemmatizer
-    tokenizer = ru_processor.tokenizer
-
-    result = tokenizer.tokenize(text)
-
-    lemmas = []
-    for word in result:
-        lemmas.append(lemmatizer.normal_forms(word)[0])
-    return lemmas
-
-
-def vectorize(text):
-    rubert_path = 'deeppavlov/rubert_cased_L-12_H-768_A-12_v2'
-    bert_config = read_json(configs.embedder.bert_embedder)
-    bert_config['metadata']['variables']['BERT_PATH'] = rubert_path
-    # print(bert_config)
-
-    # m = build_model(bert_config, download=True)
-    m = build_model(bert_config)
-
-    tokens, token_embs, subtokens, subtoken_embs, sent_max_embs, sent_mean_embs, bert_pooler_outputs = m([text])
-    return sent_mean_embs[0]
+if __name__ == '__main__':
+    query = 'Ты че в натуре'
+    print(NlpUtils().sentence_to_vector(query))
